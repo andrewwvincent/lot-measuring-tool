@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🗺️ Lot Measuring Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        .sidebar {
+            width: 400px;
+            padding: 20px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        
+        .main-area {
+            flex: 1;
+            position: relative;
+        }
+        
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+        
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            margin: -20px -20px 20px -20px;
+            text-align: center;
+        }
+        
+        .search-section {
+            margin-bottom: 20px;
+        }
+        
+        .search-section input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+        
+        .address-list {
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+        }
+        
+        .address-item {
+            padding: 8px;
+            cursor: pointer;
+            border-bottom: 1px solid #ecf0f1;
+            font-size: 12px;
+        }
+        
+        .address-item:hover {
+            background: #ecf0f1;
+        }
+        
+        .tools-section {
+            margin-bottom: 20px;
+        }
+        
+        .tool-button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .tool-boundary { background: #f39c12; }
+        .tool-building { background: #e74c3c; }
+        .tool-field { background: #27ae60; }
+        .tool-parking { background: #95a5a6; }
+        .tool-outdoor { background: #9b59b6; }
+        
+        .tool-button.active {
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            transform: scale(1.02);
+        }
+        
+        .stats-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            padding: 5px;
+            background: white;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        
+        .controls-section button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #34495e;
+            color: white;
+        }
+        
+        .controls-section button:hover {
+            background: #2c3e50;
+        }
+        
+        .map-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        
+        .map-controls select {
+            padding: 5px;
+            border: 1px solid #bdc3c7;
+            border-radius: 3px;
+        }
+        
+        .error {
+            color: #e74c3c;
+            background: #fadbd8;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .success {
+            color: #27ae60;
+            background: #d5f4e6;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .api-key-section {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .api-key-section input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            box-sizing: border-box;
+            margin: 5px 0;
+        }
+        
+        .api-key-section button {
+            width: 100%;
+            padding: 8px;
+            background: #f39c12;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="header">
+                <h2>🗺️ Lot Measuring Tool</h2>
+                <p>Measure campus areas with precision</p>
+            </div>
+            
+            <!-- API Key Section -->
+            <div class="api-key-section" id="apiKeySection">
+                <h3>🔑 Google Maps API Key</h3>
+                <p style="font-size: 12px; margin: 10px 0;">Enter your Google Maps API key to start using the tool:</p>
+                <input type="password" id="apiKeyInput" placeholder="Enter your Google Maps API key">
+                <button onclick="initializeMap()">Load Maps</button>
+                <p style="font-size: 11px; color: #666; margin-top: 10px;">
+                    Need an API key? <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Get one here</a>
+                </p>
+            </div>
+            
+            <!-- Search Section -->
+            <div class="search-section" id="searchSection" style="display: none;">
+                <h3>📍 Search Location</h3>
+                <input type="text" id="addressSearch" placeholder="Enter school address">
+                <div class="address-list" id="addressList"></div>
+            </div>
+            
+            <!-- Drawing Tools -->
+            <div class="tools-section" id="toolsSection" style="display: none;">
+                <h3>🎨 Drawing Tools</h3>
+                <button class="tool-button tool-boundary" onclick="setTool('boundary')">
+                    🏫 School Boundary
+                </button>
+                <button class="tool-button tool-building" onclick="setTool('building')">
+                    🏢 Buildings
+                </button>
+                <button class="tool-button tool-field" onclick="setTool('field')">
+                    🏃 Playing Fields
+                </button>
+                <button class="tool-button tool-parking" onclick="setTool('parking')">
+                    🚗 Parking
+                </button>
+                <button class="tool-button tool-outdoor" onclick="setTool('outdoor')">
+                    🌳 Outdoor Space
+                </button>
+            </div>
+            
+            <!-- Statistics -->
+            <div class="stats-section" id="statsSection" style="display: none;">
+                <h3>📊 Area Summary</h3>
+                <div class="stat-item">
+                    <span>School Boundary:</span>
+                    <span id="boundaryAcres">0.0 acres (0 ft²)</span>
+                </div>
+                <div class="stat-item">
+                    <span>Buildings:</span>
+                    <span id="buildingAcres">0.0 acres (0 ft²)</span>
+                </div>
+                <div class="stat-item">
+                    <span>Playing Fields:</span>
+                    <span id="fieldAcres">0.0 acres (0 ft²)</span>
+                </div>
+                <div class="stat-item">
+                    <span>Parking:</span>
+                    <span id="parkingAcres">0.0 acres (0 ft²)</span>
+                </div>
+                <div class="stat-item">
+                    <span>Outdoor Space:</span>
+                    <span id="outdoorAcres">0.0 acres (0 ft²)</span>
+                </div>
+                <div class="stat-item">
+                    <span>Field Utilization:</span>
+                    <span id="fieldUtilization">0.0%</span>
+                </div>
+            </div>
+            
+            <!-- Controls -->
+            <div class="controls-section" id="controlsSection" style="display: none;">
+                <button onclick="clearLastArea()">🗑️ Clear Last</button>
+                <button onclick="clearAllAreas()">🗑️ Clear All</button>
+                <button onclick="exportResults()">📊 Export Results</button>
+            </div>
+            
+            <div id="messageArea"></div>
+        </div>
+        
+        <div class="main-area">
+            <div id="map"></div>
+            
+            <!-- Map Controls -->
+            <div class="map-controls" id="mapControls" style="display: none;">
+                <label>Map Type:</label>
+                <select id="mapTypeSelect" onchange="changeMapType()">
+                    <option value="satellite">Satellite</option>
+                    <option value="hybrid">Hybrid</option>
+                    <option value="roadmap">Roadmap</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let map;
+        let drawingManager;
+        let currentTool = 'boundary';
+        let drawnAreas = [];
+        let geocoder;
+        
+        // Area colors
+        const areaColors = {
+            'boundary': '#f39c12',
+            'building': '#e74c3c', 
+            'field': '#27ae60',
+            'parking': '#95a5a6',
+            'outdoor': '#9b59b6'
+        };
+        
+        // Sample Austin school addresses
+        const sampleAddresses = [
+            "Austin High School, 1715 W Cesar Chavez St, Austin, TX 78703",
+            "Bowie High School, 4103 W Slaughter Ln, Austin, TX 78749",
+            "McCallum High School, 5600 Sunshine Dr, Austin, TX 78756",
+            "Anderson High School, 8403 Mesa Dr, Austin, TX 78759",
+            "Eastside Memorial High School, 1012 Arthur Stiles Rd, Austin, TX 78721",
+            "LASA High School, 7309 Lazy Creek Dr, Austin, TX 78724",
+            "Liberal Arts and Science Academy, 7309 Lazy Creek Dr, Austin, TX 78724",
+            "Akins High School, 10701 S 1st St, Austin, TX 78748",
+            "Crockett High School, 5601 Manchaca Rd, Austin, TX 78745",
+            "Lanier High School, 1201 Payton Gin Rd, Austin, TX 78758"
+        ];
+        
+        function initializeMap() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            
+            if (!apiKey) {
+                showMessage('Please enter your Google Maps API key', 'error');
+                return;
+            }
+            
+            // Store API key
+            localStorage.setItem('googleMapsApiKey', apiKey);
+            
+            // Load Google Maps API
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=drawing,geometry&callback=initMap`;
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+            
+            // Hide API key section
+            document.getElementById('apiKeySection').style.display = 'none';
+            showMessage('Loading Google Maps...', 'success');
+        }
+        
+        function initMap() {
+            // Initialize map centered on Austin
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 15,
+                center: { lat: 30.2672, lng: -97.7431 }, // Austin, TX
+                mapTypeId: 'satellite'
+            });
+            
+            // Initialize geocoder
+            geocoder = new google.maps.Geocoder();
+            
+            // Initialize drawing manager
+            drawingManager = new google.maps.drawing.DrawingManager({
+                drawingMode: null,
+                drawingControl: false,
+                polygonOptions: {
+                    fillColor: areaColors[currentTool],
+                    fillOpacity: 0.3,
+                    strokeColor: areaColors[currentTool],
+                    strokeWeight: 2,
+                    editable: true,
+                    draggable: false
+                }
+            });
+            
+            drawingManager.setMap(map);
+            
+            // Listen for polygon completion
+            drawingManager.addListener('polygoncomplete', function(polygon) {
+                handlePolygonComplete(polygon);
+            });
+            
+            // Show interface sections
+            document.getElementById('searchSection').style.display = 'block';
+            document.getElementById('toolsSection').style.display = 'block';
+            document.getElementById('statsSection').style.display = 'block';
+            document.getElementById('controlsSection').style.display = 'block';
+            document.getElementById('mapControls').style.display = 'block';
+            
+            // Load sample addresses
+            loadSampleAddresses();
+            
+            // Set up address search
+            setupAddressSearch();
+            
+            showMessage('Google Maps loaded successfully!', 'success');
+        }
+        
+        function loadSampleAddresses() {
+            const addressList = document.getElementById('addressList');
+            addressList.innerHTML = '';
+            
+            sampleAddresses.forEach(address => {
+                const item = document.createElement('div');
+                item.className = 'address-item';
+                item.textContent = address;
+                item.onclick = () => searchAddress(address);
+                addressList.appendChild(item);
+            });
+        }
+        
+        function setupAddressSearch() {
+            const searchInput = document.getElementById('addressSearch');
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchAddress(this.value);
+                }
+            });
+        }
+        
+        function searchAddress(address) {
+            if (!address.trim()) return;
+            
+            geocoder.geocode({ address: address }, function(results, status) {
+                if (status === 'OK') {
+                    map.setCenter(results[0].geometry.location);
+                    map.setZoom(18);
+                    
+                    // Add marker
+                    new google.maps.Marker({
+                        position: results[0].geometry.location,
+                        map: map,
+                        title: address
+                    });
+                    
+                    showMessage(`Found: ${results[0].formatted_address}`, 'success');
+                } else {
+                    showMessage('Address not found: ' + status, 'error');
+                }
+            });
+        }
+        
+        function setTool(tool) {
+            // Remove active class from all buttons
+            document.querySelectorAll('.tool-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to selected tool
+            document.querySelector(`.tool-${tool}`).classList.add('active');
+            
+            currentTool = tool;
+            
+            // Update drawing manager options
+            drawingManager.setOptions({
+                drawingMode: google.maps.drawing.OverlayType.POLYGON,
+                polygonOptions: {
+                    fillColor: areaColors[tool],
+                    fillOpacity: 0.3,
+                    strokeColor: areaColors[tool],
+                    strokeWeight: 2,
+                    editable: true,
+                    draggable: false
+                }
+            });
+        }
+        
+        function handlePolygonComplete(polygon) {
+            // Calculate area
+            const area = google.maps.geometry.spherical.computeArea(polygon.getPath());
+            const areaAcres = area * 0.000247105; // Convert m² to acres
+            const areaSqft = area * 10.7639; // Convert m² to ft²
+            
+            // Store polygon data
+            const areaData = {
+                polygon: polygon,
+                type: currentTool,
+                area_m2: area,
+                area_acres: areaAcres,
+                area_sqft: areaSqft,
+                coordinates: []
+            };
+            
+            // Get coordinates
+            polygon.getPath().forEach(function(coord) {
+                areaData.coordinates.push({
+                    lat: coord.lat(),
+                    lng: coord.lng()
+                });
+            });
+            
+            drawnAreas.push(areaData);
+            
+            // Add edit listener
+            polygon.addListener('mouseup', function() {
+                updateAreaCalculations();
+            });
+            
+            // Update statistics
+            updateStatistics();
+            
+            // Stop drawing mode
+            drawingManager.setDrawingMode(null);
+            
+            showMessage(`Added ${currentTool}: ${areaAcres.toFixed(2)} acres (${Math.round(areaSqft).toLocaleString()} ft²)`, 'success');
+        }
+        
+        function updateAreaCalculations() {
+            // Recalculate all areas when polygons are edited
+            drawnAreas.forEach(areaData => {
+                const area = google.maps.geometry.spherical.computeArea(areaData.polygon.getPath());
+                areaData.area_m2 = area;
+                areaData.area_acres = area * 0.000247105;
+                areaData.area_sqft = area * 10.7639;
+            });
+            
+            updateStatistics();
+        }
+        
+        function updateStatistics() {
+            const stats = {
+                boundary: 0,
+                building: 0,
+                field: 0,
+                parking: 0,
+                outdoor: 0
+            };
+            
+            drawnAreas.forEach(area => {
+                if (stats.hasOwnProperty(area.type)) {
+                    stats[area.type] += area.area_acres;
+                }
+            });
+            
+            // Update display
+            document.getElementById('boundaryAcres').textContent = 
+                `${stats.boundary.toFixed(2)} acres (${Math.round(stats.boundary * 43560).toLocaleString()} ft²)`;
+            document.getElementById('buildingAcres').textContent = 
+                `${stats.building.toFixed(2)} acres (${Math.round(stats.building * 43560).toLocaleString()} ft²)`;
+            document.getElementById('fieldAcres').textContent = 
+                `${stats.field.toFixed(2)} acres (${Math.round(stats.field * 43560).toLocaleString()} ft²)`;
+            document.getElementById('parkingAcres').textContent = 
+                `${stats.parking.toFixed(2)} acres (${Math.round(stats.parking * 43560).toLocaleString()} ft²)`;
+            document.getElementById('outdoorAcres').textContent = 
+                `${stats.outdoor.toFixed(2)} acres (${Math.round(stats.outdoor * 43560).toLocaleString()} ft²)`;
+            
+            // Calculate field utilization
+            const totalArea = stats.boundary || (stats.building + stats.field + stats.parking + stats.outdoor);
+            const fieldUtilization = totalArea > 0 ? (stats.field / totalArea) * 100 : 0;
+            document.getElementById('fieldUtilization').textContent = `${fieldUtilization.toFixed(1)}%`;
+        }
+        
+        function clearLastArea() {
+            if (drawnAreas.length > 0) {
+                const lastArea = drawnAreas.pop();
+                lastArea.polygon.setMap(null);
+                updateStatistics();
+                showMessage('Cleared last area', 'success');
+            }
+        }
+        
+        function clearAllAreas() {
+            drawnAreas.forEach(area => {
+                area.polygon.setMap(null);
+            });
+            drawnAreas = [];
+            updateStatistics();
+            showMessage('Cleared all areas', 'success');
+        }
+        
+        function changeMapType() {
+            const mapType = document.getElementById('mapTypeSelect').value;
+            map.setMapTypeId(mapType);
+        }
+        
+        function exportResults() {
+            if (drawnAreas.length === 0) {
+                showMessage('No areas to export', 'error');
+                return;
+            }
+            
+            // Create CSV content
+            let csv = 'Area Type,Area (Acres),Area (Sq Ft),Coordinates\n';
+            
+            drawnAreas.forEach(area => {
+                const coords = area.coordinates.map(c => `${c.lat},${c.lng}`).join(';');
+                csv += `${area.type},${area.area_acres.toFixed(4)},${Math.round(area.area_sqft)},${coords}\n`;
+            });
+            
+            // Download CSV
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `campus_analysis_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            showMessage('Results exported successfully!', 'success');
+        }
+        
+        function showMessage(message, type) {
+            const messageArea = document.getElementById('messageArea');
+            messageArea.innerHTML = `<div class="${type}">${message}</div>`;
+            
+            if (type !== 'loading') {
+                setTimeout(() => {
+                    messageArea.innerHTML = '';
+                }, 5000);
+            }
+        }
+        
+        // Load saved API key on page load
+        window.addEventListener('load', function() {
+            const savedApiKey = localStorage.getItem('googleMapsApiKey');
+            if (savedApiKey) {
+                document.getElementById('apiKeyInput').value = savedApiKey;
+            }
+        });
+    </script>
+</body>
+</html>

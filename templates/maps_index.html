@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Maps Campus Area Analyzer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        .sidebar {
+            width: 350px;
+            padding: 20px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        
+        .map-container {
+            flex: 1;
+            position: relative;
+        }
+        
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            margin: -20px -20px 20px -20px;
+            text-align: center;
+        }
+        
+        .search-section {
+            margin-bottom: 20px;
+        }
+        
+        .search-section input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        
+        .search-section button {
+            width: 100%;
+            padding: 10px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .search-section button:hover {
+            background: #2980b9;
+        }
+        
+        .address-list {
+            margin-bottom: 20px;
+        }
+        
+        .address-list select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        .tools-section {
+            margin-bottom: 20px;
+        }
+        
+        .tool-button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .tool-boundary { background: #f39c12; color: white; }
+        .tool-building { background: #e74c3c; color: white; }
+        .tool-field { background: #27ae60; color: white; }
+        .tool-parking { background: #95a5a6; color: white; }
+        .tool-other { background: #9b59b6; color: white; }
+        .tool-clear { background: #34495e; color: white; }
+        
+        .tool-button.active {
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            transform: scale(1.05);
+        }
+        
+        .stats-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .stats-section h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            padding: 5px;
+            background: white;
+            border-radius: 3px;
+        }
+        
+        .export-section button {
+            width: 100%;
+            padding: 12px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .export-section button:hover {
+            background: #229954;
+        }
+        
+        .error {
+            color: #e74c3c;
+            background: #fadbd8;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .success {
+            color: #27ae60;
+            background: #d5f4e6;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+        
+        .instructions {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 4px solid #3498db;
+            margin-bottom: 20px;
+        }
+        
+        .map-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        
+        .street-view-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+        }
+        
+        .street-view-content {
+            position: relative;
+            margin: 5% auto;
+            background: white;
+            width: 80%;
+            height: 80%;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .street-view-header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .street-view-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .street-view-body {
+            height: calc(100% - 120px);
+            display: flex;
+        }
+        
+        .street-view-container {
+            flex: 1;
+        }
+        
+        .street-view-controls {
+            width: 300px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-left: 1px solid #ddd;
+        }
+        
+        .floor-input-section {
+            margin-top: 20px;
+        }
+        
+        .floor-input-section input {
+            width: 60px;
+            padding: 8px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .floor-input-section button {
+            margin-left: 10px;
+            padding: 8px 15px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .building-info {
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+        }
+        
+        .map-type-selector {
+            margin-bottom: 10px;
+        }
+        
+        .map-type-selector select {
+            padding: 5px;
+            border: 1px solid #bdc3c7;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="header">
+                <h2>🗺️ Maps Campus Analyzer</h2>
+                <p>Draw on Google Maps for precise measurements</p>
+            </div>
+            
+            <!-- Address Search -->
+            <div class="search-section">
+                <h3>Search Address</h3>
+                <input type="text" id="addressInput" placeholder="Enter address...">
+                <button onclick="searchAddress()">Load on Map</button>
+            </div>
+            
+            <!-- Address List -->
+            <div class="address-list">
+                <h3>Or Select from List</h3>
+                <select id="addressSelect" onchange="selectFromList()">
+                    <option value="">Loading addresses...</option>
+                </select>
+            </div>
+            
+            <!-- Drawing Tools -->
+            <div class="tools-section">
+                <h3>Drawing Tools</h3>
+                <button class="tool-button tool-boundary" onclick="setTool('boundary')">
+                    🏫 School Boundary
+                </button>
+                <button class="tool-button tool-building" onclick="setTool('building')">
+                    🏢 Buildings
+                </button>
+                <button class="tool-button tool-field" onclick="setTool('field')">
+                    🌱 Playing Fields
+                </button>
+                <button class="tool-button tool-parking" onclick="setTool('parking')">
+                    🚗 Parking Lots
+                </button>
+                <button class="tool-button tool-other" onclick="setTool('other')">
+                    ⚪ Other Areas
+                </button>
+                <button class="tool-button tool-clear" onclick="clearLastArea()">
+                    🗑️ Clear Last
+                </button>
+            </div>
+            
+            <!-- Statistics -->
+            <div class="stats-section">
+                <h3>Area Summary</h3>
+                <div id="statsContainer">
+                    <div class="stat-item">
+                        <span>School Boundary:</span>
+                        <span id="boundaryAcres">0.0 acres (0 ft²)</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Buildings (Footprint):</span>
+                        <span id="buildingAcres">0.0 acres (0 ft²)</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Buildings (Total Floor Area):</span>
+                        <span id="buildingFloorArea">0 ft²</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Playing Fields:</span>
+                        <span id="fieldAcres">0.0 acres (0 ft²)</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Parking:</span>
+                        <span id="parkingAcres">0.0 acres (0 ft²)</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Outdoor Space:</span>
+                        <span id="outdoorAcres">0.0 acres (0 ft²)</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Field Utilization:</span>
+                        <span id="fieldUtilization">0.0%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Instructions -->
+            <div class="instructions">
+                <h4>How to Use:</h4>
+                <ol>
+                    <li>Search for an address or select from the list</li>
+                    <li>Use Google Maps controls to zoom/pan smoothly</li>
+                    <li><strong>Switch views:</strong> Satellite for measuring, Hybrid for building assessment</li>
+                    <li>Select a drawing tool from above</li>
+                    <li><strong>Click on map</strong> to add points to your polygon</li>
+                    <li><strong>Double-click</strong> to finish a shape</li>
+                    <li><strong>Drag corner points</strong> to adjust shapes precisely</li>
+                    <li><strong>Click finished buildings</strong> to set number of floors</li>
+                    <li>Areas auto-calculate in acres, ft², and total floor area</li>
+                </ol>
+            </div>
+            
+            <!-- Export -->
+            <div class="export-section">
+                <button onclick="exportResults()">📊 Export All Results</button>
+            </div>
+            
+            <div id="messageArea"></div>
+        </div>
+        
+        <div class="map-container">
+            <div id="map"></div>
+            
+            <div class="map-controls">
+                <div class="map-type-selector">
+                    <label><strong>View Type:</strong></label>
+                    <select id="mapTypeSelect" onchange="changeMapType()">
+                        <option value="satellite" selected>📡 Satellite (Overhead)</option>
+                        <option value="hybrid">🏢 Hybrid (Buildings + Labels)</option>
+                        <option value="roadmap">🗺️ Road Map</option>
+                        <option value="terrain">🏔️ Terrain</option>
+                    </select>
+                </div>
+                <div style="margin-top: 8px; font-size: 12px; color: #666;">
+                    💡 Use <strong>Satellite</strong> for area measurement<br>
+                    Use <strong>Hybrid</strong> to assess building heights
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Street View Modal -->
+    <div id="streetViewModal" class="street-view-modal">
+        <div class="street-view-content">
+            <div class="street-view-header">
+                <h3>🏢 Building Assessment - Street View</h3>
+                <button class="street-view-close" onclick="closeStreetView()">&times;</button>
+            </div>
+            <div class="street-view-body">
+                <div id="streetViewContainer" class="street-view-container"></div>
+                <div class="street-view-controls">
+                    <div class="building-info">
+                        <h4>Building Information</h4>
+                        <p><strong>Footprint:</strong> <span id="buildingFootprint">0 ft²</span></p>
+                        <p><strong>Current Floors:</strong> <span id="currentFloors">1</span></p>
+                        <p><strong>Total Floor Area:</strong> <span id="totalFloorArea">0 ft²</span></p>
+                    </div>
+                    
+                    <div>
+                        <h4>💡 Floor Estimation Tips:</h4>
+                        <ul style="font-size: 14px; color: #666;">
+                            <li>Look for window rows to count floors</li>
+                            <li>Each floor is typically 10-14 feet high</li>
+                            <li>Schools often have higher ceilings</li>
+                            <li>Use the Street View controls to look around</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="floor-input-section">
+                        <h4>Set Number of Floors:</h4>
+                        <input type="number" id="floorInput" min="1" max="20" value="1">
+                        <button onclick="updateFloorsFromStreetView()">Update</button>
+                    </div>
+                    
+                    <div style="margin-top: 20px;">
+                        <button onclick="closeStreetView()" style="background: #95a5a6;">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let map;
+        let currentTool = 'boundary';
+        let currentAddress = '';
+        let drawnAreas = [];
+        let currentPolygon = null;
+        let isDrawing = false;
+        let drawingManager;
+        let streetViewPanorama;
+        let currentBuildingIndex = -1;
+        
+        // Color mapping for different area types
+        const areaColors = {
+            'boundary': '#f39c12',
+            'building': '#e74c3c',
+            'field': '#27ae60',
+            'parking': '#95a5a6',
+            'other': '#9b59b6'
+        };
+        
+        // Initialize the application
+        function initMap() {
+            // Initialize map centered on Austin, TX
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 18,
+                center: { lat: 30.2672, lng: -97.7431 }, // Austin, TX
+                mapTypeId: 'satellite', // Start with overhead satellite view
+                mapTypeControl: false, // We'll use our custom control
+                streetViewControl: true,
+                fullscreenControl: true,
+                tilt: 0, // Force overhead view (no 45-degree angle)
+                rotateControl: false // Disable rotation for consistent overhead view
+            });
+            
+            // Initialize drawing manager
+            drawingManager = new google.maps.drawing.DrawingManager({
+                drawingMode: null,
+                drawingControl: false,
+                polygonOptions: {
+                    fillColor: areaColors[currentTool],
+                    fillOpacity: 0.3,
+                    strokeColor: areaColors[currentTool],
+                    strokeWeight: 2,
+                    editable: true,
+                    draggable: false
+                }
+            });
+            
+            drawingManager.setMap(map);
+            
+            // Listen for polygon completion
+            drawingManager.addListener('polygoncomplete', function(polygon) {
+                handlePolygonComplete(polygon);
+            });
+            
+            // Load addresses from CSV
+            loadAddresses();
+        }
+        
+        function loadAddresses() {
+            fetch('/api/load_addresses')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('addressSelect');
+                    select.innerHTML = '<option value="">Select an address...</option>';
+                    
+                    data.addresses.forEach(address => {
+                        const option = document.createElement('option');
+                        option.value = address;
+                        option.textContent = address;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    showMessage('Error loading addresses: ' + error.message, 'error');
+                });
+        }
+        
+        function searchAddress() {
+            const address = document.getElementById('addressInput').value.trim();
+            if (!address) {
+                showMessage('Please enter an address', 'error');
+                return;
+            }
+            
+            loadAddressOnMap(address);
+        }
+        
+        function selectFromList() {
+            const address = document.getElementById('addressSelect').value;
+            if (address) {
+                document.getElementById('addressInput').value = address;
+                loadAddressOnMap(address);
+            }
+        }
+        
+        function loadAddressOnMap(address) {
+            showMessage('Geocoding address...', 'loading');
+            
+            fetch('/api/geocode_address', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ address: address })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentAddress = address;
+                    
+                    // Center map on address
+                    const location = { lat: data.lat, lng: data.lng };
+                    map.setCenter(location);
+                    map.setZoom(18);
+                    
+                    // Clear previous areas
+                    clearAllAreas();
+                    
+                    // Load existing areas if any
+                    loadExistingAreas();
+                    
+                    showMessage(`Loaded: ${address}`, 'success');
+                } else {
+                    showMessage('Error: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                showMessage('Error: ' + error.message, 'error');
+            });
+        }
+        
+        function setTool(tool) {
+            // Remove active class from all buttons
+            document.querySelectorAll('.tool-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to selected tool
+            event.target.classList.add('active');
+            
+            currentTool = tool;
+            
+            // Update drawing manager options
+            drawingManager.setOptions({
+                drawingMode: google.maps.drawing.OverlayType.POLYGON,
+                polygonOptions: {
+                    fillColor: areaColors[currentTool],
+                    fillOpacity: 0.3,
+                    strokeColor: areaColors[currentTool],
+                    strokeWeight: 2,
+                    editable: true,
+                    draggable: false
+                }
+            });
+        }
+        
+        function handlePolygonComplete(polygon) {
+            // Stop drawing mode
+            drawingManager.setDrawingMode(null);
+            
+            // Get coordinates
+            const coordinates = [];
+            const path = polygon.getPath();
+            for (let i = 0; i < path.getLength(); i++) {
+                const point = path.getAt(i);
+                coordinates.push([point.lat(), point.lng()]);
+            }
+            
+            // Save area to server
+            saveArea(coordinates, currentTool, polygon);
+            
+            // Add listeners for editing
+            polygon.addListener('mouseup', function() {
+                updateAreaAfterEdit(polygon);
+            });
+            
+            // Add click listener for buildings to set floors
+            polygon.addListener('click', function(event) {
+                const areaIndex = drawnAreas.findIndex(area => area.polygon === polygon);
+                if (areaIndex !== -1 && drawnAreas[areaIndex].area_type === 'building') {
+                    promptForFloors(areaIndex);
+                }
+            });
+        }
+        
+        function saveArea(coordinates, areaType, polygon) {
+            fetch('/api/save_area', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    address: currentAddress,
+                    coordinates: coordinates,
+                    area_type: areaType
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Store polygon with metadata
+                    drawnAreas.push({
+                        polygon: polygon,
+                        area_type: areaType,
+                        area_acres: data.area_acres,
+                        area_sqft: data.area_sqft,
+                        floors: data.floors || 1,
+                        total_floor_area_sqft: data.total_floor_area_sqft,
+                        area_index: drawnAreas.length
+                    });
+                    
+                    updateStats(data.totals);
+                    
+                    let message = `Added ${areaType}: ${data.area_acres.toFixed(2)} acres (${Math.round(data.area_sqft).toLocaleString()} ft²)`;
+                    if (areaType === 'building') {
+                        message += ` - ${data.floors} floor(s), ${Math.round(data.total_floor_area_sqft).toLocaleString()} ft² total`;
+                    }
+                    showMessage(message, 'success');
+                } else {
+                    // Remove polygon if save failed
+                    polygon.setMap(null);
+                    showMessage('Error saving area: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                polygon.setMap(null);
+                showMessage('Error: ' + error.message, 'error');
+            });
+        }
+        
+        function updateAreaAfterEdit(polygon) {
+            // Find the area index for this polygon
+            const areaIndex = drawnAreas.findIndex(area => area.polygon === polygon);
+            if (areaIndex === -1) return;
+            
+            // Get updated coordinates
+            const coordinates = [];
+            const path = polygon.getPath();
+            for (let i = 0; i < path.getLength(); i++) {
+                const point = path.getAt(i);
+                coordinates.push([point.lat(), point.lng()]);
+            }
+            
+            // Update on server
+            fetch('/api/update_area', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    address: currentAddress,
+                    area_index: areaIndex,
+                    coordinates: coordinates,
+                    area_type: drawnAreas[areaIndex].area_type
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    drawnAreas[areaIndex].area_acres = data.area_acres;
+                    updateStats(data.totals);
+                    showMessage(`Updated ${drawnAreas[areaIndex].area_type}: ${data.area_acres.toFixed(2)} acres`, 'success');
+                } else {
+                    showMessage('Error updating area: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                showMessage('Error: ' + error.message, 'error');
+            });
+        }
+        
+        function clearLastArea() {
+            if (drawnAreas.length === 0) {
+                showMessage('No areas to clear', 'error');
+                return;
+            }
+            
+            const lastIndex = drawnAreas.length - 1;
+            const lastArea = drawnAreas[lastIndex];
+            
+            fetch('/api/delete_area', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    address: currentAddress,
+                    area_index: lastIndex
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove polygon from map
+                    lastArea.polygon.setMap(null);
+                    drawnAreas.pop();
+                    
+                    updateStats(data.totals);
+                    showMessage('Cleared last area', 'success');
+                } else {
+                    showMessage('Error clearing area: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                showMessage('Error: ' + error.message, 'error');
+            });
+        }
+        
+        function clearAllAreas() {
+            drawnAreas.forEach(area => {
+                area.polygon.setMap(null);
+            });
+            drawnAreas = [];
+            updateStats();
+        }
+        
+        function loadExistingAreas() {
+            if (!currentAddress) return;
+            
+            fetch(`/api/get_analysis?address=${encodeURIComponent(currentAddress)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.analysis && data.analysis.areas) {
+                        data.analysis.areas.forEach((area, index) => {
+                            createPolygonFromCoordinates(area.coordinates, area.area_type, area.area_acres, index);
+                        });
+                        updateStats(data.totals);
+                    }
+                })
+                .catch(error => {
+                    console.log('No existing analysis found');
+                });
+        }
+        
+        function createPolygonFromCoordinates(coordinates, areaType, areaAcres, areaIndex) {
+            const paths = coordinates.map(coord => ({ lat: coord[0], lng: coord[1] }));
+            
+            const polygon = new google.maps.Polygon({
+                paths: paths,
+                fillColor: areaColors[areaType],
+                fillOpacity: 0.3,
+                strokeColor: areaColors[areaType],
+                strokeWeight: 2,
+                editable: true,
+                draggable: false
+            });
+            
+            polygon.setMap(map);
+            
+            // Add to drawn areas
+            drawnAreas.push({
+                polygon: polygon,
+                area_type: areaType,
+                area_acres: areaAcres,
+                area_index: areaIndex
+            });
+            
+            // Add edit listener
+            polygon.addListener('mouseup', function() {
+                updateAreaAfterEdit(polygon);
+            });
+            
+            // Add click listener for buildings to set floors
+            polygon.addListener('click', function(event) {
+                if (areaType === 'building') {
+                    promptForFloors(areaIndex);
+                }
+            });
+        }
+        
+        function changeMapType() {
+            const mapType = document.getElementById('mapTypeSelect').value;
+            map.setMapTypeId(mapType);
+            
+            // Always maintain overhead view for accurate measurements
+            map.setTilt(0);
+            
+            // Show helpful message
+            if (mapType === 'satellite') {
+                showMessage('Satellite view: Best for accurate area measurement', 'success');
+            } else if (mapType === 'hybrid') {
+                showMessage('Hybrid view: Shows building labels and 3D perspective', 'success');
+            }
+        }
+        
+        function promptForFloors(areaIndex) {
+            const area = drawnAreas[areaIndex];
+            currentBuildingIndex = areaIndex;
+            
+            // Calculate building center for Street View
+            const coordinates = area.polygon.getPath().getArray();
+            let centerLat = 0, centerLng = 0;
+            coordinates.forEach(coord => {
+                centerLat += coord.lat();
+                centerLng += coord.lng();
+            });
+            centerLat /= coordinates.length;
+            centerLng /= coordinates.length;
+            
+            // Update building info in modal
+            document.getElementById('buildingFootprint').textContent = 
+                Math.round(area.area_sqft || 0).toLocaleString() + ' ft²';
+            document.getElementById('currentFloors').textContent = area.floors || 1;
+            document.getElementById('totalFloorArea').textContent = 
+                Math.round(area.total_floor_area_sqft || 0).toLocaleString() + ' ft²';
+            document.getElementById('floorInput').value = area.floors || 1;
+            
+            // Show modal
+            document.getElementById('streetViewModal').style.display = 'block';
+            
+            // Initialize Street View
+            setTimeout(() => {
+                initStreetView(centerLat, centerLng);
+            }, 100);
+        }
+        
+        function initStreetView(lat, lng) {
+            const streetViewContainer = document.getElementById('streetViewContainer');
+            
+            streetViewPanorama = new google.maps.StreetViewPanorama(streetViewContainer, {
+                position: { lat: lat, lng: lng },
+                pov: { heading: 0, pitch: 0 },
+                zoom: 1,
+                addressControl: false,
+                showRoadLabels: false
+            });
+            
+            // Check if Street View is available
+            const streetViewService = new google.maps.StreetViewService();
+            streetViewService.getPanorama({
+                location: { lat: lat, lng: lng },
+                radius: 50
+            }, (data, status) => {
+                if (status !== 'OK') {
+                    showMessage('Street View not available for this location. You can still manually enter floors.', 'error');
+                }
+            });
+        }
+        
+        function closeStreetView() {
+            document.getElementById('streetViewModal').style.display = 'none';
+            currentBuildingIndex = -1;
+        }
+        
+        function updateFloorsFromStreetView() {
+            const floors = parseInt(document.getElementById('floorInput').value);
+            if (floors && floors > 0 && currentBuildingIndex >= 0) {
+                updateFloors(currentBuildingIndex, floors);
+                closeStreetView();
+            }
+        }
+        
+        function updateFloors(areaIndex, floors) {
+            fetch('/api/update_floors', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    address: currentAddress,
+                    area_index: areaIndex,
+                    floors: floors
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    drawnAreas[areaIndex].floors = floors;
+                    drawnAreas[areaIndex].total_floor_area_sqft = data.total_floor_area_sqft;
+                    updateStats(data.totals);
+                    showMessage(`Updated building: ${floors} floor(s), ${Math.round(data.total_floor_area_sqft).toLocaleString()} ft² total`, 'success');
+                } else {
+                    showMessage('Error updating floors: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                showMessage('Error: ' + error.message, 'error');
+            });
+        }
+        
+        function updateStats(totals = null) {
+            if (!totals) {
+                // Reset to zero
+                document.getElementById('boundaryAcres').textContent = '0.0 acres (0 ft²)';
+                document.getElementById('buildingAcres').textContent = '0.0 acres (0 ft²)';
+                document.getElementById('buildingFloorArea').textContent = '0 ft²';
+                document.getElementById('fieldAcres').textContent = '0.0 acres (0 ft²)';
+                document.getElementById('parkingAcres').textContent = '0.0 acres (0 ft²)';
+                document.getElementById('outdoorAcres').textContent = '0.0 acres (0 ft²)';
+                document.getElementById('fieldUtilization').textContent = '0.0%';
+                return;
+            }
+            
+            // Calculate total building floor area
+            let totalBuildingFloorArea = 0;
+            drawnAreas.forEach(area => {
+                if (area.area_type === 'building') {
+                    totalBuildingFloorArea += area.total_floor_area_sqft || 0;
+                }
+            });
+            
+            document.getElementById('boundaryAcres').textContent = 
+                `${totals.total_boundary_acres} acres (${Math.round(totals.total_boundary_acres * 43560).toLocaleString()} ft²)`;
+            document.getElementById('buildingAcres').textContent = 
+                `${totals.building_acres} acres (${Math.round(totals.building_acres * 43560).toLocaleString()} ft²)`;
+            document.getElementById('buildingFloorArea').textContent = 
+                `${Math.round(totalBuildingFloorArea).toLocaleString()} ft²`;
+            document.getElementById('fieldAcres').textContent = 
+                `${totals.field_acres} acres (${Math.round(totals.field_acres * 43560).toLocaleString()} ft²)`;
+            document.getElementById('parkingAcres').textContent = 
+                `${totals.parking_acres} acres (${Math.round(totals.parking_acres * 43560).toLocaleString()} ft²)`;
+            document.getElementById('outdoorAcres').textContent = 
+                `${totals.outdoor_acres} acres (${Math.round(totals.outdoor_acres * 43560).toLocaleString()} ft²)`;
+            document.getElementById('fieldUtilization').textContent = totals.field_utilization_pct + '%';
+        }
+        
+        function exportResults() {
+            fetch('/api/export_results')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showMessage(`Exported ${data.results_count} analyses to ${data.file_path}`, 'success');
+                    } else {
+                        showMessage('Error exporting: ' + data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    showMessage('Error: ' + error.message, 'error');
+                });
+        }
+        
+        function showMessage(message, type) {
+            const messageArea = document.getElementById('messageArea');
+            messageArea.innerHTML = `<div class="${type}">${message}</div>`;
+            
+            // Clear message after 5 seconds for success/error messages
+            if (type !== 'loading') {
+                setTimeout(() => {
+                    messageArea.innerHTML = '';
+                }, 5000);
+            }
+        }
+        
+        // Initialize when page loads
+        window.onload = function() {
+            loadAddresses();
+        };
+    </script>
+    
+    <!-- Load Google Maps API -->
+    <script async defer 
+        src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=drawing&callback=initMap">
+    </script>
+</body>
+</html>

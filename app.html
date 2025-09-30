@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🗺️ Lot Measuring Tool</title>
+    <title>Google Maps Campus Area Analyzer</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -18,7 +18,7 @@
         }
         
         .sidebar {
-            width: 400px;
+            width: 350px;
             padding: 20px;
             background: white;
             box-shadow: 2px 0 10px rgba(0,0,0,0.1);
@@ -26,14 +26,14 @@
             z-index: 1000;
         }
         
-        .main-area {
+        .map-container {
             flex: 1;
             position: relative;
         }
         
         #map {
-            height: 100%;
             width: 100%;
+            height: 100%;
         }
         
         .header {
@@ -42,6 +42,33 @@
             padding: 15px;
             margin: -20px -20px 20px -20px;
             text-align: center;
+        }
+        
+        .api-key-section {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .api-key-section input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            box-sizing: border-box;
+            margin: 5px 0;
+        }
+        
+        .api-key-section button {
+            width: 100%;
+            padding: 8px;
+            background: #f39c12;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
         }
         
         .search-section {
@@ -198,8 +225,8 @@
     <div class="container">
         <div class="sidebar">
             <div class="header">
-                <h2>🗺️ Lot Measuring Tool</h2>
-                <p>Measure campus areas with precision</p>
+                <h2>🗺️ Maps Campus Analyzer</h2>
+                <p>Draw on Google Maps for precise measurements</p>
             </div>
             
             <!-- API Key Section -->
@@ -310,18 +337,43 @@
             'outdoor': '#9b59b6'
         };
         
-        // Sample Austin school addresses
+        // Austin area school addresses
         const sampleAddresses = [
             "Austin High School, 1715 W Cesar Chavez St, Austin, TX 78703",
-            "Bowie High School, 4103 W Slaughter Ln, Austin, TX 78749",
+            "Bowie High School, 4103 W Slaughter Ln, Austin, TX 78749", 
             "McCallum High School, 5600 Sunshine Dr, Austin, TX 78756",
             "Anderson High School, 8403 Mesa Dr, Austin, TX 78759",
             "Eastside Memorial High School, 1012 Arthur Stiles Rd, Austin, TX 78721",
             "LASA High School, 7309 Lazy Creek Dr, Austin, TX 78724",
-            "Liberal Arts and Science Academy, 7309 Lazy Creek Dr, Austin, TX 78724",
             "Akins High School, 10701 S 1st St, Austin, TX 78748",
             "Crockett High School, 5601 Manchaca Rd, Austin, TX 78745",
-            "Lanier High School, 1201 Payton Gin Rd, Austin, TX 78758"
+            "Lanier High School, 1201 Payton Gin Rd, Austin, TX 78758",
+            "Reagan High School, 7104 Berkman Dr, Austin, TX 78752",
+            "Travis High School, 1211 E Oltorf St, Austin, TX 78704",
+            "LBJ High School, 7309 Lazy Creek Dr, Austin, TX 78724",
+            "Garza Independence High School, 1600 E 6th St, Austin, TX 78702",
+            "Ann Richards School, 2206 Prather Ln, Austin, TX 78704",
+            "Austin Community College Highland, 5930 Middle Fiskville Rd, Austin, TX 78752",
+            "UT Elementary School, 1616 Guadalupe St, Austin, TX 78701",
+            "Kealing Middle School, 1607 E 6th St, Austin, TX 78702",
+            "O. Henry Middle School, 2610 W 10th St, Austin, TX 78703",
+            "Burnet Middle School, 8401 Hathaway Dr, Austin, TX 78757",
+            "Gorzycki Middle School, 7412 W Slaughter Ln, Austin, TX 78749",
+            "Bedichek Middle School, 6800 Bill Hughes Rd, Austin, TX 78745",
+            "Covington Middle School, 3700 Convict Hill Rd, Austin, TX 78749",
+            "Paredes Middle School, 6817 Airy Ln, Austin, TX 78745",
+            "Small Middle School, 1108 E 41st St, Austin, TX 78751",
+            "Dobie Middle School, 5100 Convict Hill Rd, Austin, TX 78749",
+            "Bailey Middle School, 9015 Brodie Ln, Austin, TX 78748",
+            "Cedar Creek Elementary, 4801 Packsaddle Pass, Austin, TX 78745",
+            "Zilker Elementary, 1900 Bluebonnet Ln, Austin, TX 78704",
+            "Barton Hills Elementary, 2108 Barton Hills Dr, Austin, TX 78704",
+            "Casis Elementary, 2710 Exposition Blvd, Austin, TX 78703",
+            "Highland Park Elementary, 3001 Crosscreek Dr, Austin, TX 78757",
+            "Bryker Woods Elementary, 3309 Kerbey Ln, Austin, TX 78703",
+            "Mathews Elementary, 906 W Mary St, Austin, TX 78704",
+            "Oak Hill Elementary, 8601 Convict Hill Rd, Austin, TX 78749",
+            "Patton Elementary, 4211 Medical Pkwy, Austin, TX 78756"
         ];
         
         function initializeMap() {

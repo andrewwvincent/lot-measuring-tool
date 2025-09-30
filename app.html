@@ -229,26 +229,16 @@
                 <p>Draw on Google Maps for precise measurements</p>
             </div>
             
-            <!-- API Key Section -->
-            <div class="api-key-section" id="apiKeySection">
-                <h3>🔑 Google Maps API Key</h3>
-                <p style="font-size: 12px; margin: 10px 0;">Enter your Google Maps API key to start using the tool:</p>
-                <input type="password" id="apiKeyInput" placeholder="Enter your Google Maps API key">
-                <button onclick="initializeMap()">Load Maps</button>
-                <p style="font-size: 11px; color: #666; margin-top: 10px;">
-                    Need an API key? <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Get one here</a>
-                </p>
-            </div>
             
             <!-- Search Section -->
-            <div class="search-section" id="searchSection" style="display: none;">
+            <div class="search-section" id="searchSection">
                 <h3>📍 Search Location</h3>
                 <input type="text" id="addressSearch" placeholder="Enter school address">
                 <div class="address-list" id="addressList"></div>
             </div>
             
             <!-- Drawing Tools -->
-            <div class="tools-section" id="toolsSection" style="display: none;">
+            <div class="tools-section" id="toolsSection">
                 <h3>🎨 Drawing Tools</h3>
                 <button class="tool-button tool-boundary" onclick="setTool('boundary')">
                     🏫 School Boundary
@@ -268,7 +258,7 @@
             </div>
             
             <!-- Statistics -->
-            <div class="stats-section" id="statsSection" style="display: none;">
+            <div class="stats-section" id="statsSection">
                 <h3>📊 Area Summary</h3>
                 <div class="stat-item">
                     <span>School Boundary:</span>
@@ -297,7 +287,7 @@
             </div>
             
             <!-- Controls -->
-            <div class="controls-section" id="controlsSection" style="display: none;">
+            <div class="controls-section" id="controlsSection">
                 <button onclick="clearLastArea()">🗑️ Clear Last</button>
                 <button onclick="clearAllAreas()">🗑️ Clear All</button>
                 <button onclick="exportResults()">📊 Export Results</button>
@@ -377,15 +367,8 @@
         ];
         
         function initializeMap() {
-            const apiKey = document.getElementById('apiKeyInput').value.trim();
-            
-            if (!apiKey) {
-                showMessage('Please enter your Google Maps API key', 'error');
-                return;
-            }
-            
-            // Store API key
-            localStorage.setItem('googleMapsApiKey', apiKey);
+            // API key is hardcoded - no user input needed
+            const apiKey = 'AIzaSyBoY49XH3vIuWR0ekN7MRk3n8gJstxdb3w';
             
             // Load Google Maps API
             const script = document.createElement('script');
@@ -394,8 +377,6 @@
             script.defer = true;
             document.head.appendChild(script);
             
-            // Hide API key section
-            document.getElementById('apiKeySection').style.display = 'none';
             showMessage('Loading Google Maps...', 'success');
         }
         
@@ -431,12 +412,7 @@
                 handlePolygonComplete(polygon);
             });
             
-            // Show interface sections
-            document.getElementById('searchSection').style.display = 'block';
-            document.getElementById('toolsSection').style.display = 'block';
-            document.getElementById('statsSection').style.display = 'block';
-            document.getElementById('controlsSection').style.display = 'block';
-            document.getElementById('mapControls').style.display = 'block';
+            // Interface sections are already visible
             
             // Load sample addresses
             loadSampleAddresses();
@@ -661,12 +637,9 @@
             }
         }
         
-        // Load saved API key on page load
+        // Auto-load maps when page loads
         window.addEventListener('load', function() {
-            const savedApiKey = localStorage.getItem('googleMapsApiKey');
-            if (savedApiKey) {
-                document.getElementById('apiKeyInput').value = savedApiKey;
-            }
+            initializeMap();
         });
     </script>
 </body>

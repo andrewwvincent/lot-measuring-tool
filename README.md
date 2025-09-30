@@ -1,6 +1,8 @@
 # 🗺️ Lot Measuring Tool
 
-A web-based Google Maps application for measuring and analyzing school campus areas with precision and ease.
+A **Flask web application** for measuring and analyzing school campus areas using Google Maps with precision and ease.
+
+> **⚠️ Important:** This is a server-side application that requires local installation and a Google Maps API key. It cannot run directly on GitHub Pages.
 
 ## 🌟 Features
 

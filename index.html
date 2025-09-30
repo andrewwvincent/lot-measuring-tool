@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🗺️ Lot Measuring Tool</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        
+        .demo-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 30px;
+            margin: 30px 0;
+            border-left: 5px solid #667eea;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .feature {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .feature h3 {
+            color: #333;
+            margin-top: 0;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 40px 0;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .installation {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+        
+        .installation h3 {
+            color: #90cdf4;
+            margin-top: 0;
+        }
+        
+        .code-block {
+            background: #1a202c;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        
+        .screenshot {
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+            display: block;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        
+        .warning {
+            background: #fed7d7;
+            border: 1px solid #fc8181;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .info {
+            background: #bee3f8;
+            border: 1px solid #63b3ed;
+            color: #2c5282;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗺️ Lot Measuring Tool</h1>
+            <p>Professional Google Maps-based campus area analysis with Street View integration</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="warning">
+                <strong>⚠️ Important:</strong> This is a Flask web application that requires a local server to run. 
+                GitHub Pages only serves static files, so you need to run this tool locally or deploy it to a web server.
+            </div>
+            
+            <div class="demo-section">
+                <h2>🚀 Quick Start</h2>
+                <p>Get up and running in 3 minutes:</p>
+                
+                <div class="installation">
+                    <h3>📦 Installation</h3>
+                    <div class="code-block">
+# Clone the repository<br>
+git clone https://github.com/andrewwvincent/lot-measuring-tool.git<br>
+cd lot-measuring-tool<br><br>
+
+# Install dependencies<br>
+pip install -r requirements.txt<br><br>
+
+# Set up your Google Maps API key<br>
+cp .env.example .env<br>
+# Edit .env and add your API key<br><br>
+
+# Run the application<br>
+python maps_analyzer_app.py<br><br>
+
+# Open in browser<br>
+# http://localhost:5001
+                    </div>
+                </div>
+            </div>
+            
+            <h2>✨ Features</h2>
+            <div class="features">
+                <div class="feature">
+                    <h3>🗺️ Interactive Google Maps</h3>
+                    <p>Satellite and hybrid views with smooth navigation and high-resolution imagery for precise measurements.</p>
+                </div>
+                
+                <div class="feature">
+                    <h3>📐 Precision Drawing</h3>
+                    <p>Click-to-draw polygon tools with real-time area calculations using accurate lat/lng coordinates.</p>
+                </div>
+                
+                <div class="feature">
+                    <h3>🏢 Building Analysis</h3>
+                    <p>Street View integration for visual floor counting and total building square footage calculations.</p>
+                </div>
+                
+                <div class="feature">
+                    <h3>📊 Real-time Stats</h3>
+                    <p>Instant calculations in acres and square feet with field utilization percentages and capacity estimates.</p>
+                </div>
+                
+                <div class="feature">
+                    <h3>🎯 Multiple Area Types</h3>
+                    <p>Classify boundaries, buildings, fields, parking lots, and outdoor spaces with color-coded visualization.</p>
+                </div>
+                
+                <div class="feature">
+                    <h3>📋 Export Results</h3>
+                    <p>Generate CSV reports with detailed measurements, coordinates, and analysis summaries.</p>
+                </div>
+            </div>
+            
+            <div class="info">
+                <strong>💡 Perfect for:</strong> School facility planning, real estate analysis, campus development, 
+                sports field assessment, and educational space research.
+            </div>
+            
+            <div class="cta-buttons">
+                <a href="https://github.com/andrewwvincent/lot-measuring-tool" class="btn btn-primary">
+                    📥 Download & Run Locally
+                </a>
+                <a href="https://github.com/andrewwvincent/lot-measuring-tool#readme" class="btn btn-secondary">
+                    📖 View Documentation
+                </a>
+            </div>
+            
+            <h2>🛠️ Technical Requirements</h2>
+            <ul>
+                <li><strong>Python 3.8+</strong> - Modern Python environment</li>
+                <li><strong>Google Maps API Key</strong> - With Maps JavaScript, Geocoding, Static Maps, and Street View APIs enabled</li>
+                <li><strong>Web Browser</strong> - Chrome, Firefox, Safari, or Edge</li>
+                <li><strong>Internet Connection</strong> - For Google Maps data and imagery</li>
+            </ul>
+            
+            <h2>🎯 Sample Use Cases</h2>
+            <div class="features">
+                <div class="feature">
+                    <h3>🏫 School Campus Analysis</h3>
+                    <p>Measure available space for new facilities, assess field utilization, and plan campus expansions.</p>
+                </div>
+                
+                <div class="feature">
+                    <h3>🏡 Real Estate Assessment</h3>
+                    <p>Calculate lot sizes, building footprints, and outdoor space for property valuations.</p>
+                </div>
+                
+                <div class="feature">
+                    <h3>🏃 Sports Facility Planning</h3>
+                    <p>Design optimal field layouts, measure existing facilities, and plan new sports complexes.</p>
+                </div>
+            </div>
+            
+            <div class="demo-section">
+                <h2>🌟 Why This Tool?</h2>
+                <p>Built specifically for educational facility analysis, this tool combines the power of Google Maps 
+                with precision measurement capabilities and Street View integration for comprehensive campus assessment.</p>
+                
+                <p><strong>Key advantages:</strong></p>
+                <ul>
+                    <li>✅ <strong>Accurate measurements</strong> using UTM projections</li>
+                    <li>✅ <strong>Visual floor counting</strong> with Street View integration</li>
+                    <li>✅ <strong>Professional reporting</strong> with detailed CSV exports</li>
+                    <li>✅ <strong>Mobile-friendly</strong> responsive design</li>
+                    <li>✅ <strong>Open source</strong> and customizable</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

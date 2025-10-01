@@ -370,9 +370,9 @@
             // API key is hardcoded - no user input needed
             const apiKey = 'AIzaSyBoY49XH3vIuWR0ekN7MRk3n8gJstxdb3w';
             
-            // Load Google Maps API
+            // Load Google Maps API with proper async loading
             const script = document.createElement('script');
-            script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=drawing,geometry&callback=initMap`;
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry&callback=initMap&loading=async`;
             script.async = true;
             script.defer = true;
             document.head.appendChild(script);
@@ -391,25 +391,36 @@
             // Initialize geocoder
             geocoder = new google.maps.Geocoder();
             
-            // Initialize drawing manager
-            drawingManager = new google.maps.drawing.DrawingManager({
-                drawingMode: null,
-                drawingControl: false,
-                polygonOptions: {
-                    fillColor: areaColors[currentTool],
-                    fillOpacity: 0.3,
-                    strokeColor: areaColors[currentTool],
-                    strokeWeight: 2,
-                    editable: true,
-                    draggable: false
+            // Initialize click-to-draw functionality (replacing deprecated drawing manager)
+            let isDrawing = false;
+            let currentPath = [];
+            
+            // Add click listener for drawing
+            map.addListener('click', function(event) {
+                if (currentTool && isDrawing) {
+                    currentPath.push(event.latLng);
+                    
+                    // Show temporary markers
+                    new google.maps.Marker({
+                        position: event.latLng,
+                        map: map,
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: 4,
+                            fillColor: areaColors[currentTool],
+                            fillOpacity: 1,
+                            strokeWeight: 1,
+                            strokeColor: '#ffffff'
+                        }
+                    });
                 }
             });
             
-            drawingManager.setMap(map);
-            
-            // Listen for polygon completion
-            drawingManager.addListener('polygoncomplete', function(polygon) {
-                handlePolygonComplete(polygon);
+            // Add double-click listener to complete polygon
+            map.addListener('dblclick', function(event) {
+                if (currentTool && isDrawing && currentPath.length >= 3) {
+                    completePolygon();
+                }
             });
             
             // Interface sections are already visible
@@ -474,29 +485,10 @@
             });
             
             // Add active class to selected tool
-            document.querySelector(`.tool-${tool}`).classList.add('active');
+            event.target.classList.add('active');
             
             currentTool = tool;
-            
-            // Update drawing manager options
-            drawingManager.setOptions({
-                drawingMode: google.maps.drawing.OverlayType.POLYGON,
-                polygonOptions: {
-                    fillColor: areaColors[tool],
-                    fillOpacity: 0.3,
-                    strokeColor: areaColors[tool],
-                    strokeWeight: 2,
-                    editable: true,
-                    draggable: false
-                }
-            });
-        }
-        
-        function handlePolygonComplete(polygon) {
-            // Calculate area
-            const area = google.maps.geometry.spherical.computeArea(polygon.getPath());
-            const areaAcres = area * 0.000247105; // Convert m² to acres
-            const areaSqft = area * 10.7639; // Convert m² to ft²
+            showMessage(`Selected ${tool} tool. Click on map to draw.`, 'success');
             
             // Store polygon data
             const areaData = {

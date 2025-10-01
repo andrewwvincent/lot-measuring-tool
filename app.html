@@ -267,11 +267,9 @@
     <script>
         let map;
         let geocoder;
+        let drawingManager;
         let currentTool = null;
         let drawnAreas = [];
-        let isDrawing = false;
-        let currentPath = [];
-        let tempMarkers = [];
         let isTopDownMode = true;
         
         // Area colors
@@ -310,18 +308,25 @@
             // Initialize geocoder
             geocoder = new google.maps.Geocoder();
             
-            // Add click listener for drawing
-            map.addListener('click', function(event) {
-                if (currentTool && isDrawing) {
-                    addPointToPath(event.latLng);
+            // Initialize drawing manager (like your original Flask version)
+            drawingManager = new google.maps.drawing.DrawingManager({
+                drawingMode: null,
+                drawingControl: false,
+                polygonOptions: {
+                    fillColor: areaColors[currentTool || 'boundary'],
+                    fillOpacity: 0.3,
+                    strokeColor: areaColors[currentTool || 'boundary'],
+                    strokeWeight: 2,
+                    editable: true,
+                    draggable: false
                 }
             });
             
-            // Add double-click listener to complete polygon
-            map.addListener('dblclick', function(event) {
-                if (currentTool && isDrawing && currentPath.length >= 3) {
-                    completePolygon();
-                }
+            drawingManager.setMap(map);
+            
+            // Listen for polygon completion (like your original)
+            drawingManager.addListener('polygoncomplete', function(polygon) {
+                handlePolygonComplete(polygon);
             });
             
             // Maintain tilt setting when zooming
@@ -416,53 +421,28 @@
             event.target.classList.add('active');
             
             currentTool = tool;
-            isDrawing = true;
-            currentPath = [];
-            clearTempMarkers();
             
-            showMessage(`Click on map to draw ${tool} area. Double-click to finish.`, 'success');
-        }
-        
-        function addPointToPath(latLng) {
-            currentPath.push(latLng);
-            
-            // Add temporary marker
-            const marker = new google.maps.Marker({
-                position: latLng,
-                map: map,
-                icon: {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    scale: 4,
-                    fillColor: areaColors[currentTool],
-                    fillOpacity: 1,
-                    strokeWeight: 1,
-                    strokeColor: '#ffffff'
+            // Update drawing manager options (like your original Flask version)
+            drawingManager.setOptions({
+                drawingMode: google.maps.drawing.OverlayType.POLYGON,
+                polygonOptions: {
+                    fillColor: areaColors[tool],
+                    fillOpacity: 0.3,
+                    strokeColor: areaColors[tool],
+                    strokeWeight: 2,
+                    editable: true,
+                    draggable: false
                 }
             });
             
-            tempMarkers.push(marker);
+            showMessage(`Drawing ${tool} area. Click on map to start drawing.`, 'success');
         }
         
-        function completePolygon() {
-            if (currentPath.length < 3) {
-                showMessage('Need at least 3 points to create an area', 'error');
-                return;
-            }
+        function handlePolygonComplete(polygon) {
+            // Stop drawing mode (like your original Flask version)
+            drawingManager.setDrawingMode(null);
             
-            // Create polygon
-            const polygon = new google.maps.Polygon({
-                paths: currentPath,
-                fillColor: areaColors[currentTool],
-                fillOpacity: 0.3,
-                strokeColor: areaColors[currentTool],
-                strokeWeight: 2,
-                editable: true,
-                draggable: false
-            });
-            
-            polygon.setMap(map);
-            
-            // Calculate area
+            // Calculate area using Google's geometry library
             const area = google.maps.geometry.spherical.computeArea(polygon.getPath());
             const areaAcres = area * 0.000247105; // Convert m² to acres
             const areaSqft = area * 10.7639; // Convert m² to ft²
@@ -478,7 +458,7 @@
             
             drawnAreas.push(areaData);
             
-            // Add edit listener
+            // Add edit listener (like your original)
             polygon.addListener('mouseup', function() {
                 updateAreaCalculations();
             });
@@ -606,7 +586,7 @@
     
     <!-- Load Google Maps API -->
     <script async defer 
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBoY49XH3vIuWR0ekN7MRk3n8gJstxdb3w&libraries=geometry&callback=initMap&loading=async">
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBoY49XH3vIuWR0ekN7MRk3n8gJstxdb3w&libraries=drawing,geometry&callback=initMap&loading=async">
     </script>
 </body>
 </html>

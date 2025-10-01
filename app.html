@@ -128,6 +128,30 @@
             color: white;
         }
         
+        .view-controls {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .toggle-button {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #3498db;
+            color: white;
+            font-size: 14px;
+        }
+        
+        .toggle-button.active {
+            background: #27ae60;
+        }
+        
         .message {
             padding: 10px;
             border-radius: 4px;
@@ -162,6 +186,18 @@
                 <select id="addressSelect" onchange="selectFromList()">
                     <option value="">Select from Austin schools...</option>
                 </select>
+            </div>
+            
+            <!-- View Controls -->
+            <div class="view-controls">
+                <h3>📐 View Settings</h3>
+                <p style="font-size: 12px; margin: 5px 0; color: #666;">Control satellite view angle for precise measurements:</p>
+                <button id="topDownBtn" class="toggle-button active" onclick="toggleTopDown()">
+                    📡 Top-Down View (Recommended)
+                </button>
+                <button id="angledBtn" class="toggle-button" onclick="toggleAngled()">
+                    🏢 45° Angled View
+                </button>
             </div>
             
             <!-- Drawing Tools -->
@@ -236,6 +272,7 @@
         let isDrawing = false;
         let currentPath = [];
         let tempMarkers = [];
+        let isTopDownMode = true;
         
         // Area colors
         const areaColors = {
@@ -265,7 +302,9 @@
             map = new google.maps.Map(document.getElementById('map'), {
                 zoom: 15,
                 center: { lat: 30.2672, lng: -97.7431 },
-                mapTypeId: 'satellite'
+                mapTypeId: 'satellite',
+                tilt: 0, // Start with top-down view
+                rotateControl: false // Disable rotation for consistent measurements
             });
             
             // Initialize geocoder
@@ -285,10 +324,39 @@
                 }
             });
             
+            // Maintain tilt setting when zooming
+            map.addListener('zoom_changed', function() {
+                if (isTopDownMode) {
+                    map.setTilt(0);
+                }
+            });
+            
             // Load school addresses
             loadSchoolAddresses();
             
             showMessage('Google Maps loaded successfully! Select a drawing tool to start.', 'success');
+        }
+        
+        function toggleTopDown() {
+            isTopDownMode = true;
+            map.setTilt(0);
+            
+            // Update button states
+            document.getElementById('topDownBtn').classList.add('active');
+            document.getElementById('angledBtn').classList.remove('active');
+            
+            showMessage('Switched to top-down view - best for accurate measurements', 'success');
+        }
+        
+        function toggleAngled() {
+            isTopDownMode = false;
+            map.setTilt(45);
+            
+            // Update button states
+            document.getElementById('angledBtn').classList.add('active');
+            document.getElementById('topDownBtn').classList.remove('active');
+            
+            showMessage('Switched to 45° angled view - shows building heights', 'success');
         }
         
         function loadSchoolAddresses() {
